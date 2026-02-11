@@ -59,8 +59,9 @@ pub use display_map::{
 };
 pub use edit_prediction_types::Direction;
 pub use editor_settings::{
-    CompletionDetailAlignment, CurrentLineHighlight, DocumentColorsRenderMode, EditorSettings,
-    HideMouseMode, ScrollBeyondLastLine, ScrollbarAxes, SearchSettings, ShowMinimap,
+    CompletionDetailAlignment, CurrentLineHighlight, DiffViewStyle, DocumentColorsRenderMode,
+    EditorSettings, HideMouseMode, ScrollBeyondLastLine, ScrollbarAxes, SearchSettings,
+    ShowMinimap,
 };
 pub use element::{
     CursorLayout, EditorElement, HighlightedRange, HighlightedRangeLine, PointForPosition,
@@ -77,7 +78,7 @@ pub use multi_buffer::{
     MultiBufferOffset, MultiBufferOffsetUtf16, MultiBufferSnapshot, PathKey, RowInfo, ToOffset,
     ToPoint,
 };
-pub use split::{SplitDiffFeatureFlag, SplittableEditor, ToggleLockedCursors, ToggleSplitDiff};
+pub use split::{SplittableEditor, ToggleSplitDiff};
 pub use split_editor_view::SplitEditorView;
 pub use text::Bias;
 
@@ -2067,13 +2068,7 @@ impl Editor {
             constrain_width: false,
             render: Arc::new(move |fold_id, fold_range, cx| {
                 let editor = editor.clone();
-                div()
-                    .id(fold_id)
-                    .bg(cx.theme().colors().ghost_element_background)
-                    .hover(|style| style.bg(cx.theme().colors().ghost_element_hover))
-                    .active(|style| style.bg(cx.theme().colors().ghost_element_active))
-                    .rounded_xs()
-                    .size_full()
+                FoldPlaceholder::fold_element(fold_id, cx)
                     .cursor_pointer()
                     .child("⋯")
                     .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
@@ -7583,6 +7578,7 @@ impl Editor {
                 constrain_width: false,
                 merge_adjacent: false,
                 type_tag: Some(type_id),
+                collapsed_text: None,
             };
             let creases = new_newlines
                 .into_iter()

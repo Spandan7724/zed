@@ -381,7 +381,7 @@ impl AgentConnection for AcpConnection {
         self.telemetry_id.clone()
     }
 
-    fn new_thread(
+    fn new_session(
         self: Rc<Self>,
         project: Entity<Project>,
         cwd: &Path,
@@ -574,6 +574,7 @@ impl AgentConnection for AcpConnection {
             let action_log = cx.new(|_| ActionLog::new(project.clone()));
             let thread: Entity<AcpThread> = cx.new(|cx| {
                 AcpThread::new(
+                    None,
                     self.server_name.clone(),
                     self.clone(),
                     project,
@@ -631,6 +632,7 @@ impl AgentConnection for AcpConnection {
         let action_log = cx.new(|_| ActionLog::new(project.clone()));
         let thread: Entity<AcpThread> = cx.new(|cx| {
             AcpThread::new(
+                None,
                 self.server_name.clone(),
                 self.clone(),
                 project,
@@ -704,6 +706,7 @@ impl AgentConnection for AcpConnection {
         let action_log = cx.new(|_| ActionLog::new(project.clone()));
         let thread: Entity<AcpThread> = cx.new(|cx| {
             AcpThread::new(
+                None,
                 self.server_name.clone(),
                 self.clone(),
                 project,
@@ -1160,14 +1163,12 @@ impl acp::Client for ClientDelegate {
         &self,
         arguments: acp::RequestPermissionRequest,
     ) -> Result<acp::RequestPermissionResponse, acp::Error> {
-        let respect_always_allow_setting;
         let thread;
         {
             let sessions_ref = self.sessions.borrow();
             let session = sessions_ref
                 .get(&arguments.session_id)
                 .context("Failed to get session")?;
-            respect_always_allow_setting = session.session_modes.is_none();
             thread = session.thread.clone();
         }
 
@@ -1177,7 +1178,6 @@ impl acp::Client for ClientDelegate {
             thread.request_tool_call_authorization(
                 arguments.tool_call,
                 acp_thread::PermissionOptions::Flat(arguments.options),
-                respect_always_allow_setting,
                 cx,
             )
         })??;
